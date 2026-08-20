@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>高雄市同步聽打服務 - 個人申請</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.6/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header>
+    <h1>同步聽打服務｜個人申請</h1>
+    <p>高雄市聲暉協會 · 請依實際狀況填寫</p>
+    <div class="progress">
+      <div class="dot active" data-dot="1"></div>
+      <div class="dot" data-dot="2"></div>
+      <div class="dot" data-dot="3"></div>
+      <div class="dot" data-dot="4"></div>
+      <div class="dot" data-dot="5"></div>
+    </div>
+  </header>
+  <p class="desktop-hint">此頁面在手機 LINE 內開啟時會以全螢幕顯示</p>
+
+  <form id="appForm" onsubmit="return false;">
+
+    <!-- STEP 1：申請人基本資料 -->
+    <div class="step active" data-step="1">
+      <div class="card">
+        <h2>① 申請人基本資料</h2>
+
+        <label class="req">姓名</label>
+        <input type="text" id="name" required>
+
+        <label class="req">聯絡方式（手機簡訊）</label>
+        <input type="tel" id="contactSms" inputmode="tel" placeholder="0912-345-678" required>
+
+        <label>電話 / 傳真</label>
+        <input type="tel" id="contactPhone" inputmode="tel">
+
+        <label>電子信箱</label>
+        <input type="email" id="contactEmail" inputmode="email">
+
+        <label>活動主辦單位名稱（聯絡人）</label>
+        <input type="text" id="eventOrgName" placeholder="若非以個人名義參加活動可填寫">
+
+        <label>活動主辦單位聯絡電話</label>
+        <input type="tel" id="eventOrgPhone" inputmode="tel">
+      </div>
+    </div>
+
+    <!-- STEP 2：申請內容 -->
+    <div class="step" data-step="2">
+      <div class="card">
+        <h2>② 服務內容</h2>
+
+        <label class="req">服務日期</label>
+        <input type="date" id="serviceDate" required>
+
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label class="req">開始時間</label>
+            <input type="time" id="serviceStartTime" required>
+          </div>
+          <div style="flex:1;">
+            <label class="req">結束時間</label>
+            <input type="time" id="serviceEndTime" required>
+          </div>
+        </div>
+        <div class="hint">系統會自動換算服務時數</div>
+
+        <label class="req">服務事由</label>
+        <textarea id="serviceReason" placeholder="請說明活動性質；不涉及私人商業利益、付費課程需自費申請" required></textarea>
+
+        <label class="req">服務地點</label>
+        <input type="text" id="serviceLocation" placeholder="請詳填地址、廳室" required>
+
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label class="req">聽語障者人數</label>
+            <input type="number" id="deafCount" inputmode="numeric" min="1" required>
+          </div>
+          <div style="flex:1;">
+            <label>來賓人數</label>
+            <input type="number" id="guestCount" inputmode="numeric" min="0">
+          </div>
+        </div>
+
+        <label class="req">服務方式</label>
+        <div class="radio-row">
+          <label><input type="radio" name="serviceMode" value="現場服務" required> 現場服務</label>
+          <label><input type="radio" name="serviceMode" value="線上服務(Google Meet)"> 線上服務（Google Meet）</label>
+        </div>
+
+        <label>空間設備（可複選）</label>
+        <div class="check-row">
+          <label><input type="checkbox" name="equipment" value="聽打員以筆電螢幕協助聽障者個人"> 聽打員以筆電螢幕協助聽障者個人</label>
+          <label><input type="checkbox" name="equipment" value="現場投影"> 現場投影</label>
+          <label><input type="checkbox" name="equipment" value="需借用移動式投影機及布幕"> 需借用移動式投影機及布幕（自費申請不提供）</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3：身障手冊上傳 -->
+    <div class="step" data-step="3">
+      <div class="card">
+        <h2>③ 身心障礙證明上傳</h2>
+        <p class="hint">請從相簿選取身心障礙手冊／證明正反面照片，僅作為本次申請審核使用。</p>
+
+        <label class="req">正面</label>
+        <div class="upload-box" id="frontBox">
+          <span class="upload-btn">點此選擇照片</span>
+          <input type="file" id="idCardFront" accept="image/*" required>
+          <div id="frontPreviewWrap"></div>
+        </div>
+
+        <label class="req">反面</label>
+        <div class="upload-box" id="backBox">
+          <span class="upload-btn">點此選擇照片</span>
+          <input type="file" id="idCardBack" accept="image/*" required>
+          <div id="backPreviewWrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4：簽名 -->
+    <div class="step" data-step="4">
+      <div class="card">
+        <h2>④ 申請人簽章</h2>
+        <p class="hint">請於下方框內手寫簽名，完成簽署視同已詳閱申請須知，並清楚明白同步聽打服務不提供文字檔案。</p>
+        <canvas id="sigCanvas"></canvas>
+        <div class="sig-actions">
+          <button type="button" class="btn-ghost" id="clearSig">清除重簽</button>
+        </div>
+        <div class="errmsg" id="sigError">請簽名後再繼續</div>
+
+        <div class="agree">
+          <input type="checkbox" id="agreedToTerms" required>
+          <span>我已詳讀【同步聽打服務申請須知】，保證本申請表所填寫內容及檢附文件均屬實，並知悉遲到逾20分鐘服務將自動取消。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5：確認送出 -->
+    <div class="step" data-step="5">
+      <div class="card">
+        <h2>⑤ 確認申請資料</h2>
+        <div id="summaryBox"></div>
+      </div>
+    </div>
+
+  </form>
+
+  <div class="nav">
+    <button class="btn btn-secondary" id="prevBtn" style="display:none;">上一步</button>
+    <button class="btn btn-primary" id="nextBtn">下一步</button>
+  </div>
+
+  <div id="resultScreen">
+    <div class="icon">✅</div>
+    <h2>申請已送出</h2>
+    <p>您的申請編號：</p>
+    <div class="appid" id="resultAppId">--</div>
+    <p class="hint">窗口將於審核後與您聯繫，如有疑問請撥打 0971-300-105（陳先生）</p>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>送出中，請稍候...</div>
+  </div>
+
+</div><!-- /.app-shell -->
+
+<script>
+/* ============================================================
+ * 設定區：部署後請填入你的 LIFF ID 與 GAS 網頁應用程式網址
+ * ============================================================ */
+const LIFF_ID = 'YOUR_LIFF_ID';                 // 例如 '1234567890-abcdEFGH'
+const GAS_WEB_APP_URL = 'YOUR_GAS_WEB_APP_URL'; // GAS 網頁應用程式 /exec 網址（doPost 端點）
+
+let currentStep = 1;
+const totalSteps = 5;
+let lineProfile = { userId: '', displayName: '' };
+
+// ---------- LIFF 初始化 ----------
+async function initLiff() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    const profile = await liff.getProfile();
+    lineProfile.userId = profile.userId;
+    lineProfile.displayName = profile.displayName;
+  } catch (err) {
+    // 在一般瀏覽器（非 LINE 內建瀏覽器）開啟時 liff.init 可能失敗，
+    // 這裡不擋流程，方便你在電腦上直接測試表單本身，只是不會有 LINE 資料
+    console.warn('LIFF 初始化失敗（若在一般瀏覽器測試屬正常現象）', err);
+  }
+}
+initLiff();
+
+// ---------- 簽名畫布 ----------
+const sigCanvas = document.getElementById('sigCanvas');
+let signaturePad;
+function setupSignaturePad() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  sigCanvas.width = sigCanvas.offsetWidth * ratio;
+  sigCanvas.height = sigCanvas.offsetHeight * ratio;
+  sigCanvas.getContext('2d').scale(ratio, ratio);
+  signaturePad = new SignaturePad(sigCanvas, { backgroundColor: '#ffffff' });
+}
+window.addEventListener('load', setupSignaturePad);
+
+// 畫面尺寸改變（手機轉向、桌面縮放視窗）時，畫布底層像素需要重新對齊，
+// 否則簽名會變形或錯位。重新對齊必然會清空畫布，所以已簽名時要提醒使用者。
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!signaturePad) return;
+    const hadContent = !signaturePad.isEmpty();
+    setupSignaturePad();
+    if (hadContent) {
+      const err = document.getElementById('sigError');
+      err.textContent = '偵測到畫面尺寸改變，簽名畫布已重新整理，請重新簽名';
+      err.style.display = 'block';
+    }
+  }, 250);
+});
+
+document.getElementById('clearSig').addEventListener('click', () => {
+  signaturePad.clear();
+  document.getElementById('sigError').style.display = 'none';
+});
+
+// ---------- 照片上傳預覽 ----------
+function bindPhotoInput(inputId, previewWrapId) {
+  const input = document.getElementById(inputId);
+  const wrap = document.getElementById(previewWrapId);
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      wrap.innerHTML = '<img src="' + e.target.result + '">';
+      input.dataset.base64 = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+bindPhotoInput('idCardFront', 'frontPreviewWrap');
+bindPhotoInput('idCardBack', 'backPreviewWrap');
+
+// ---------- 步驟切換 ----------
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function showStep(step) {
+  document.querySelectorAll('.step').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.step) === step);
+  });
+  document.querySelectorAll('.progress .dot').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.dot) <= step);
+  });
+  prevBtn.style.display = step === 1 ? 'none' : 'block';
+  nextBtn.textContent = step === totalSteps ? '確認送出' : '下一步';
+  if (step === totalSteps) renderSummary();
+  currentStep = step;
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    const name = document.getElementById('name').value.trim();
+    const sms = document.getElementById('contactSms').value.trim();
+    if (!name || !sms) { alert('請填寫姓名與手機簡訊聯絡方式'); return false; }
+  }
+  if (step === 2) {
+    const required = ['serviceDate', 'serviceStartTime', 'serviceEndTime', 'serviceReason', 'serviceLocation', 'deafCount'];
+    for (const id of required) {
+      if (!document.getElementById(id).value) { alert('請完整填寫服務內容必填欄位'); return false; }
+    }
+    if (!document.querySelector('input[name=serviceMode]:checked')) { alert('請選擇服務方式'); return false; }
+  }
+  if (step === 3) {
+    if (!document.getElementById('idCardFront').dataset.base64 || !document.getElementById('idCardBack').dataset.base64) {
+      alert('請上傳身心障礙手冊正反面照片'); return false;
+    }
+  }
+  if (step === 4) {
+    if (signaturePad.isEmpty()) {
+      document.getElementById('sigError').textContent = '請簽名後再繼續';
+      document.getElementById('sigError').style.display = 'block';
+      return false;
+    }
+    document.getElementById('sigError').style.display = 'none';
+    if (!document.getElementById('agreedToTerms').checked) {
+      alert('請勾選同意申請須知'); return false;
+    }
+  }
+  return true;
+}
+
+nextBtn.addEventListener('click', () => {
+  if (!validateStep(currentStep)) return;
+  if (currentStep === totalSteps) {
+    submitApplication();
+    return;
+  }
+  showStep(currentStep + 1);
+  document.querySelector('.app-shell').scrollIntoView({ block: 'start' });
+});
+
+prevBtn.addEventListener('click', () => {
+  showStep(currentStep - 1);
+  document.querySelector('.app-shell').scrollIntoView({ block: 'start' });
+});
+
+// ---------- 確認畫面摘要 ----------
+function renderSummary() {
+  const mode = document.querySelector('input[name=serviceMode]:checked');
+  const equipment = Array.from(document.querySelectorAll('input[name=equipment]:checked')).map(el => el.value);
+  const rows = [
+    ['姓名', document.getElementById('name').value],
+    ['聯絡方式', document.getElementById('contactSms').value],
+    ['服務日期', document.getElementById('serviceDate').value],
+    ['服務時間', document.getElementById('serviceStartTime').value + ' - ' + document.getElementById('serviceEndTime').value],
+    ['服務地點', document.getElementById('serviceLocation').value],
+    ['聽語障者人數', document.getElementById('deafCount').value],
+    ['服務方式', mode ? mode.value : ''],
+    ['空間設備', equipment.join('、') || '未勾選'],
+  ];
+  document.getElementById('summaryBox').innerHTML = rows.map(r =>
+    '<div class="summary-item"><span>' + r[0] + '</span><span>' + (r[1] || '-') + '</span></div>'
+  ).join('');
+}
+
+// ---------- 送出 ----------
+function calcHours(start, end) {
+  if (!start || !end) return '';
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  let diff = (eh * 60 + em) - (sh * 60 + sm);
+  if (diff < 0) diff += 24 * 60;
+  return (diff / 60).toFixed(1);
+}
+
+async function submitApplication() {
+  const mode = document.querySelector('input[name=serviceMode]:checked');
+  const equipment = Array.from(document.querySelectorAll('input[name=equipment]:checked')).map(el => el.value);
+  const start = document.getElementById('serviceStartTime').value;
+  const end = document.getElementById('serviceEndTime').value;
+
+  const payload = {
+    applicationType: '個人申請',
+    lineUserId: lineProfile.userId,
+    lineDisplayName: lineProfile.displayName,
+    name: document.getElementById('name').value,
+    contactSms: document.getElementById('contactSms').value,
+    contactPhone: document.getElementById('contactPhone').value,
+    contactEmail: document.getElementById('contactEmail').value,
+    eventOrgName: document.getElementById('eventOrgName').value,
+    eventOrgPhone: document.getElementById('eventOrgPhone').value,
+    serviceDate: document.getElementById('serviceDate').value,
+    serviceStartTime: start,
+    serviceEndTime: end,
+    serviceHours: calcHours(start, end),
+    serviceReason: document.getElementById('serviceReason').value,
+    serviceLocation: document.getElementById('serviceLocation').value,
+    deafCount: document.getElementById('deafCount').value,
+    serviceMode: mode ? mode.value : '',
+    guestCount: document.getElementById('guestCount').value,
+    equipment: equipment,
+    idCardFront: document.getElementById('idCardFront').dataset.base64 || '',
+    idCardBack: document.getElementById('idCardBack').dataset.base64 || '',
+    signature: signaturePad.toDataURL('image/png'),
+    agreedToTerms: document.getElementById('agreedToTerms').checked
+  };
+
+  document.getElementById('loadingOverlay').classList.add('active');
+
+  try {
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避免觸發 CORS 預檢請求
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    document.getElementById('loadingOverlay').classList.remove('active');
+
+    if (result.ok) {
+      document.getElementById('resultAppId').textContent = result.applicationId;
+      document.querySelector('form').style.display = 'none';
+      document.querySelector('header .progress').style.display = 'none';
+      document.querySelector('.nav').style.display = 'none';
+      document.getElementById('resultScreen').classList.add('active');
+    } else {
+      alert('送出失敗：' + result.error);
+    }
+  } catch (err) {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    alert('連線發生錯誤，請稍後再試：' + err.message);
+  }
+}
+</script>
+
+</body>
+</html>

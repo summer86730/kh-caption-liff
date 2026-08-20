@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>高雄市同步聽打服務 - 單位申請</title>
+<link rel="stylesheet" href="../assets/style.css">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header>
+    <h1>同步聽打服務｜單位申請</h1>
+    <p>高雄市聲暉協會 · 請以申請單位立場填寫</p>
+    <div class="progress">
+      <div class="dot active" data-dot="1"></div>
+      <div class="dot" data-dot="2"></div>
+      <div class="dot" data-dot="3"></div>
+    </div>
+  </header>
+  <p class="desktop-hint">此頁面在手機 LINE 內開啟時會以全螢幕顯示</p>
+
+  <form id="appForm" onsubmit="return false;">
+
+    <!-- STEP 1：單位基本資料 -->
+    <div class="step active" data-step="1">
+      <div class="card">
+        <h2>① 申請單位資料</h2>
+
+        <label class="req">單位全名</label>
+        <input type="text" id="orgName" required>
+
+        <label class="req">聯絡人</label>
+        <input type="text" id="contactName" required>
+
+        <label>電話</label>
+        <input type="tel" id="contactPhone" inputmode="tel" placeholder="含分機">
+
+        <label>手機</label>
+        <input type="tel" id="contactMobile" inputmode="tel">
+        <div class="hint">電話、手機請至少填寫一種</div>
+
+        <label>電子信箱</label>
+        <input type="email" id="contactEmail" inputmode="email">
+
+        <label class="req">地址</label>
+        <input type="text" id="orgAddress" required>
+      </div>
+    </div>
+
+    <!-- STEP 2：申請內容 -->
+    <div class="step" data-step="2">
+      <div class="card">
+        <h2>② 服務內容</h2>
+
+        <label class="req">服務日期</label>
+        <input type="date" id="serviceDate" required>
+
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label class="req">開始時間</label>
+            <input type="time" id="serviceStartTime" required>
+          </div>
+          <div style="flex:1;">
+            <label class="req">結束時間</label>
+            <input type="time" id="serviceEndTime" required>
+          </div>
+        </div>
+        <div class="hint">系統會自動換算服務時數</div>
+
+        <label class="req">服務事由</label>
+        <textarea id="serviceReason" placeholder="請說明活動性質；不涉及私人商業利益、付費課程需自費申請" required></textarea>
+
+        <label class="req">服務地點</label>
+        <input type="text" id="serviceLocation" placeholder="請詳填地址、廳室" required>
+
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label class="req">聽語障者人數</label>
+            <input type="number" id="deafCount" inputmode="numeric" min="1" required>
+          </div>
+          <div style="flex:1;">
+            <label>來賓人數</label>
+            <input type="number" id="guestCount" inputmode="numeric" min="0">
+          </div>
+        </div>
+
+        <label class="req">服務方式</label>
+        <div class="radio-row">
+          <label><input type="radio" name="serviceMode" value="現場服務" required> 現場服務</label>
+          <label><input type="radio" name="serviceMode" value="線上服務(Google Meet)"> 線上服務（Google Meet）</label>
+        </div>
+
+        <label>空間設備（可複選）</label>
+        <div class="check-row">
+          <label><input type="checkbox" name="equipment" value="聽打員以筆電螢幕協助聽障者個人"> 聽打員以筆電螢幕協助聽障者個人</label>
+          <label><input type="checkbox" name="equipment" value="現場投影"> 現場投影</label>
+          <label><input type="checkbox" name="equipment" value="需借用移動式投影機及布幕"> 需借用移動式投影機及布幕（自費申請不提供）</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3：確認送出 -->
+    <div class="step" data-step="3">
+      <div class="card">
+        <h2>③ 確認申請資料</h2>
+        <div id="summaryBox"></div>
+
+        <div class="notice">
+          單位申請採「實體用印」方式，不需要在此簽名。送出後系統會產生申請編號，
+          本會核章與案號確認後，會提供可列印的完整申請表供貴單位蓋用單位戳章。
+        </div>
+
+        <div class="agree">
+          <input type="checkbox" id="agreedToTerms" required>
+          <span>本單位已詳讀【同步聽打服務申請須知】，保證本申請表所填寫內容及檢附文件均屬實，並知悉遲到逾20分鐘服務將自動取消。</span>
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+  <div class="nav">
+    <button class="btn btn-secondary" id="prevBtn" style="display:none;">上一步</button>
+    <button class="btn btn-primary" id="nextBtn">下一步</button>
+  </div>
+
+  <div id="resultScreen">
+    <div class="icon">✅</div>
+    <h2>申請已送出</h2>
+    <p>申請編號：</p>
+    <div class="appid" id="resultAppId">--</div>
+    <p class="hint">窗口確認案號與派遣後，會提供可列印的完整申請表供貴單位用印，如有疑問請撥打 0971-300-105（陳先生）</p>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>送出中，請稍候...</div>
+  </div>
+
+</div><!-- /.app-shell -->
+
+<script>
+/* ============================================================
+ * 設定區：部署後請填入你的 LIFF ID 與 GAS 網頁應用程式網址
+ * （跟個人申請頁面共用同一個 GAS_WEB_APP_URL 即可，同一個後端）
+ * ============================================================ */
+const LIFF_ID = 'YOUR_ORG_LIFF_ID';
+const GAS_WEB_APP_URL = 'YOUR_GAS_WEB_APP_URL';
+
+let currentStep = 1;
+const totalSteps = 3;
+let lineProfile = { userId: '', displayName: '' };
+
+async function initLiff() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    const profile = await liff.getProfile();
+    lineProfile.userId = profile.userId;
+    lineProfile.displayName = profile.displayName;
+  } catch (err) {
+    console.warn('LIFF 初始化失敗（若在一般瀏覽器測試屬正常現象）', err);
+  }
+}
+initLiff();
+
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function showStep(step) {
+  document.querySelectorAll('.step').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.step) === step);
+  });
+  document.querySelectorAll('.progress .dot').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.dot) <= step);
+  });
+  prevBtn.style.display = step === 1 ? 'none' : 'block';
+  nextBtn.textContent = step === totalSteps ? '確認送出' : '下一步';
+  if (step === totalSteps) renderSummary();
+  currentStep = step;
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    const orgName = document.getElementById('orgName').value.trim();
+    const contactName = document.getElementById('contactName').value.trim();
+    const address = document.getElementById('orgAddress').value.trim();
+    const phone = document.getElementById('contactPhone').value.trim();
+    const mobile = document.getElementById('contactMobile').value.trim();
+    if (!orgName || !contactName || !address) { alert('請填寫單位全名、聯絡人與地址'); return false; }
+    if (!phone && !mobile) { alert('請至少填寫一種聯絡方式（電話或手機）'); return false; }
+  }
+  if (step === 2) {
+    const required = ['serviceDate', 'serviceStartTime', 'serviceEndTime', 'serviceReason', 'serviceLocation', 'deafCount'];
+    for (const id of required) {
+      if (!document.getElementById(id).value) { alert('請完整填寫服務內容必填欄位'); return false; }
+    }
+    if (!document.querySelector('input[name=serviceMode]:checked')) { alert('請選擇服務方式'); return false; }
+  }
+  if (step === 3) {
+    if (!document.getElementById('agreedToTerms').checked) {
+      alert('請勾選同意申請須知'); return false;
+    }
+  }
+  return true;
+}
+
+nextBtn.addEventListener('click', () => {
+  if (!validateStep(currentStep)) return;
+  if (currentStep === totalSteps) {
+    submitApplication();
+    return;
+  }
+  showStep(currentStep + 1);
+  document.querySelector('.app-shell').scrollIntoView({ block: 'start' });
+});
+
+prevBtn.addEventListener('click', () => {
+  showStep(currentStep - 1);
+  document.querySelector('.app-shell').scrollIntoView({ block: 'start' });
+});
+
+function renderSummary() {
+  const mode = document.querySelector('input[name=serviceMode]:checked');
+  const equipment = Array.from(document.querySelectorAll('input[name=equipment]:checked')).map(el => el.value);
+  const rows = [
+    ['單位全名', document.getElementById('orgName').value],
+    ['聯絡人', document.getElementById('contactName').value],
+    ['服務日期', document.getElementById('serviceDate').value],
+    ['服務時間', document.getElementById('serviceStartTime').value + ' - ' + document.getElementById('serviceEndTime').value],
+    ['服務地點', document.getElementById('serviceLocation').value],
+    ['聽語障者人數', document.getElementById('deafCount').value],
+    ['服務方式', mode ? mode.value : ''],
+    ['空間設備', equipment.join('、') || '未勾選'],
+  ];
+  document.getElementById('summaryBox').innerHTML = rows.map(r =>
+    '<div class="summary-item"><span>' + r[0] + '</span><span>' + (r[1] || '-') + '</span></div>'
+  ).join('');
+}
+
+function calcHours(start, end) {
+  if (!start || !end) return '';
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  let diff = (eh * 60 + em) - (sh * 60 + sm);
+  if (diff < 0) diff += 24 * 60;
+  return (diff / 60).toFixed(1);
+}
+
+async function submitApplication() {
+  const mode = document.querySelector('input[name=serviceMode]:checked');
+  const equipment = Array.from(document.querySelectorAll('input[name=equipment]:checked')).map(el => el.value);
+  const start = document.getElementById('serviceStartTime').value;
+  const end = document.getElementById('serviceEndTime').value;
+
+  const payload = {
+    applicationType: '單位申請',
+    lineUserId: lineProfile.userId,
+    lineDisplayName: lineProfile.displayName,
+    orgName: document.getElementById('orgName').value,
+    contactName: document.getElementById('contactName').value,
+    contactPhone: document.getElementById('contactPhone').value,
+    contactMobile: document.getElementById('contactMobile').value,
+    contactEmail: document.getElementById('contactEmail').value,
+    orgAddress: document.getElementById('orgAddress').value,
+    serviceDate: document.getElementById('serviceDate').value,
+    serviceStartTime: start,
+    serviceEndTime: end,
+    serviceHours: calcHours(start, end),
+    serviceReason: document.getElementById('serviceReason').value,
+    serviceLocation: document.getElementById('serviceLocation').value,
+    deafCount: document.getElementById('deafCount').value,
+    serviceMode: mode ? mode.value : '',
+    guestCount: document.getElementById('guestCount').value,
+    equipment: equipment,
+    agreedToTerms: document.getElementById('agreedToTerms').checked
+  };
+
+  document.getElementById('loadingOverlay').classList.add('active');
+
+  try {
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    document.getElementById('loadingOverlay').classList.remove('active');
+
+    if (result.ok) {
+      document.getElementById('resultAppId').textContent = result.applicationId;
+      document.querySelector('form').style.display = 'none';
+      document.querySelector('header .progress').style.display = 'none';
+      document.querySelector('.nav').style.display = 'none';
+      document.getElementById('resultScreen').classList.add('active');
+    } else {
+      alert('送出失敗：' + result.error);
+    }
+  } catch (err) {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    alert('連線發生錯誤，請稍後再試：' + err.message);
+  }
+}
+</script>
+
+</body>
+</html>
