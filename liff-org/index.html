@@ -14,20 +14,45 @@
   <header>
     <h1>同步聽打服務｜單位申請</h1>
     <p>高雄市聲暉協會 · 請以申請單位立場填寫</p>
+    <div class="progress-text" id="progressText">步驟 1 / 5：申請須知</div>
     <div class="progress">
       <div class="dot active" data-dot="1"></div>
       <div class="dot" data-dot="2"></div>
       <div class="dot" data-dot="3"></div>
+      <div class="dot" data-dot="4"></div>
+      <div class="dot" data-dot="5"></div>
     </div>
   </header>
   <p class="desktop-hint">此頁面在手機 LINE 內開啟時會以全螢幕顯示</p>
 
   <form id="appForm" onsubmit="return false;">
 
-    <!-- STEP 1：單位基本資料 -->
+    <!-- STEP 1：申請須知 -->
     <div class="step active" data-step="1">
       <div class="card">
-        <h2>① 申請單位資料</h2>
+        <h2>① 申請須知</h2>
+        <p class="hint">請詳細閱讀以下說明，勾選同意後才能繼續填寫申請表。</p>
+        <ol style="padding-left:20px; font-size:15px; line-height:1.9; color:var(--text);">
+          <li>請詳讀本須知，且保證申請表所填寫內容以及檢附各項文件均屬實。</li>
+          <li>請務必準時，臨時取消或變更時間請即早提出；若遲到逾 20 分鐘以上，聽打服務將自動取消。</li>
+          <li>同步聽打服務不提供逐字稿或任何文字檔案。如有聽打服務以外需求需自費申請，並自行與媒合夥伴商談，本會僅媒合聽打員，不介入議價核銷程序。</li>
+          <li>本申請表所蒐集之個人資訊，僅作為同步聽打服務使用，並遵守個人資料保護法相關規定。</li>
+          <li>各類活動、會議、講座、研習，請於申請時儘量檢附流程、講義、簡章、議程等相關資料，方便聽打員預先準備。</li>
+          <li>申請單送出後，請務必來電或簡訊（陳先生手機：0971-300-105）確認，謝謝！</li>
+        </ol>
+
+        <div class="agree">
+          <input type="checkbox" id="agreedToGuideline" required>
+          <span>我完全清楚了解並願意配合申請須知之規定</span>
+        </div>
+        <div class="errmsg" id="guidelineError">請先勾選同意申請須知才能繼續</div>
+      </div>
+    </div>
+
+    <!-- STEP 2：單位基本資料 -->
+    <div class="step" data-step="2">
+      <div class="card">
+        <h2>② 申請單位資料</h2>
 
         <label class="req">單位全名</label>
         <input type="text" id="orgName" required>
@@ -50,10 +75,10 @@
       </div>
     </div>
 
-    <!-- STEP 2：申請內容 -->
-    <div class="step" data-step="2">
+    <!-- STEP 3：申請內容 -->
+    <div class="step" data-step="3">
       <div class="card">
-        <h2>② 服務內容</h2>
+        <h2>③ 服務內容</h2>
 
         <label class="req">服務日期</label>
         <input type="date" id="serviceDate" required>
@@ -102,10 +127,38 @@
       </div>
     </div>
 
-    <!-- STEP 3：確認送出 -->
-    <div class="step" data-step="3">
+    <!-- STEP 4：參考資料 -->
+    <div class="step" data-step="4">
       <div class="card">
-        <h2>③ 確認申請資料</h2>
+        <h2>④ 參考資料提供</h2>
+        <label class="req">是否有檔案方便事先提供聽打員參考？</label>
+        <div class="hint">例如活動流程、講義、簡章、議程等，有助於聽打員預先準備專有名詞。</div>
+        <div class="radio-row">
+          <label><input type="radio" name="hasRefFile" value="有" required> 有</label>
+          <label><input type="radio" name="hasRefFile" value="無" required> 無</label>
+        </div>
+
+        <div id="refFileSection" style="display:none; margin-top:8px;">
+          <label>上傳檔案</label>
+          <div class="upload-box" id="refFileBox">
+            <span class="upload-btn">點此選擇檔案</span>
+            <input type="file" id="refFile" accept=".doc,.docx,.pdf,.ppt,.pptx">
+            <div id="refFilePreviewWrap" class="hint"></div>
+          </div>
+          <div class="hint">支援 doc / docx / pdf / ppt / pptx</div>
+
+          <div class="agree" style="margin-top:14px;">
+            <input type="checkbox" id="deferRefFile">
+            <span>目前手邊沒有檔案，我選擇之後再補上傳（不影響本次申請送出）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5：確認送出 -->
+    <div class="step" data-step="5">
+      <div class="card">
+        <h2>⑤ 確認申請資料</h2>
         <div id="summaryBox"></div>
 
         <div class="notice">
@@ -140,6 +193,8 @@
     <div>送出中，請稍候...</div>
   </div>
 
+  <div class="helpbar">📞 填寫遇到問題？歡迎撥打 0971-300-105（陳先生）</div>
+
 </div><!-- /.app-shell -->
 
 <script>
@@ -151,7 +206,8 @@ const LIFF_ID = 'YOUR_ORG_LIFF_ID';
 const GAS_WEB_APP_URL = 'YOUR_GAS_WEB_APP_URL';
 
 let currentStep = 1;
-const totalSteps = 3;
+const totalSteps = 5;
+const stepTitles = ['申請須知', '申請單位資料', '服務內容', '參考資料提供', '確認申請資料'];
 let lineProfile = { userId: '', displayName: '' };
 
 async function initLiff() {
@@ -173,6 +229,31 @@ initLiff();
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
+// ---------- 參考資料檔案 ----------
+const refFileInput = document.getElementById('refFile');
+refFileInput.addEventListener('change', () => {
+  const file = refFileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('refFilePreviewWrap').textContent = '已選擇檔案：' + file.name;
+    refFileInput.dataset.base64 = e.target.result;
+    refFileInput.dataset.fileName = file.name;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('deferRefFile').addEventListener('change', function () {
+  refFileInput.disabled = this.checked;
+  document.getElementById('refFileBox').style.opacity = this.checked ? '.4' : '1';
+});
+
+document.querySelectorAll('input[name=hasRefFile]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('refFileSection').style.display = radio.value === '有' && radio.checked ? 'block' : 'none';
+  });
+});
+
 function showStep(step) {
   document.querySelectorAll('.step').forEach(el => {
     el.classList.toggle('active', Number(el.dataset.step) === step);
@@ -182,12 +263,20 @@ function showStep(step) {
   });
   prevBtn.style.display = step === 1 ? 'none' : 'block';
   nextBtn.textContent = step === totalSteps ? '確認送出' : '下一步';
+  document.getElementById('progressText').textContent = '步驟 ' + step + ' / ' + totalSteps + '：' + stepTitles[step - 1];
   if (step === totalSteps) renderSummary();
   currentStep = step;
 }
 
 function validateStep(step) {
   if (step === 1) {
+    if (!document.getElementById('agreedToGuideline').checked) {
+      document.getElementById('guidelineError').style.display = 'block';
+      return false;
+    }
+    document.getElementById('guidelineError').style.display = 'none';
+  }
+  if (step === 2) {
     const orgName = document.getElementById('orgName').value.trim();
     const contactName = document.getElementById('contactName').value.trim();
     const address = document.getElementById('orgAddress').value.trim();
@@ -196,14 +285,24 @@ function validateStep(step) {
     if (!orgName || !contactName || !address) { alert('請填寫單位全名、聯絡人與地址'); return false; }
     if (!phone && !mobile) { alert('請至少填寫一種聯絡方式（電話或手機）'); return false; }
   }
-  if (step === 2) {
+  if (step === 3) {
     const required = ['serviceDate', 'serviceStartTime', 'serviceEndTime', 'serviceReason', 'serviceLocation', 'deafCount'];
     for (const id of required) {
       if (!document.getElementById(id).value) { alert('請完整填寫服務內容必填欄位'); return false; }
     }
     if (!document.querySelector('input[name=serviceMode]:checked')) { alert('請選擇服務方式'); return false; }
   }
-  if (step === 3) {
+  if (step === 4) {
+    const hasRef = document.querySelector('input[name=hasRefFile]:checked');
+    if (!hasRef) { alert('請選擇是否有檔案提供聽打員參考'); return false; }
+    if (hasRef.value === '有') {
+      const deferred = document.getElementById('deferRefFile').checked;
+      if (!deferred && !refFileInput.dataset.base64) {
+        alert('請上傳檔案，或勾選「之後再補上傳」'); return false;
+      }
+    }
+  }
+  if (step === 5) {
     if (!document.getElementById('agreedToTerms').checked) {
       alert('請勾選同意申請須知'); return false;
     }
@@ -229,6 +328,11 @@ prevBtn.addEventListener('click', () => {
 function renderSummary() {
   const mode = document.querySelector('input[name=serviceMode]:checked');
   const equipment = Array.from(document.querySelectorAll('input[name=equipment]:checked')).map(el => el.value);
+  const hasRef = document.querySelector('input[name=hasRefFile]:checked');
+  let refStatus = '無';
+  if (hasRef && hasRef.value === '有') {
+    refStatus = document.getElementById('deferRefFile').checked ? '有，之後補上傳' : '有，已上傳';
+  }
   const rows = [
     ['單位全名', document.getElementById('orgName').value],
     ['聯絡人', document.getElementById('contactName').value],
@@ -238,6 +342,7 @@ function renderSummary() {
     ['聽語障者人數', document.getElementById('deafCount').value],
     ['服務方式', mode ? mode.value : ''],
     ['空間設備', equipment.join('、') || '未勾選'],
+    ['參考資料', refStatus],
   ];
   document.getElementById('summaryBox').innerHTML = rows.map(r =>
     '<div class="summary-item"><span>' + r[0] + '</span><span>' + (r[1] || '-') + '</span></div>'
@@ -259,10 +364,18 @@ async function submitApplication() {
   const start = document.getElementById('serviceStartTime').value;
   const end = document.getElementById('serviceEndTime').value;
 
+  const hasRef = document.querySelector('input[name=hasRefFile]:checked');
+  const deferred = document.getElementById('deferRefFile').checked;
+  let refFileStatus = '無';
+  if (hasRef && hasRef.value === '有') {
+    refFileStatus = deferred ? '有-後續補上傳' : '有-已上傳';
+  }
+
   const payload = {
     applicationType: '單位申請',
     lineUserId: lineProfile.userId,
     lineDisplayName: lineProfile.displayName,
+    agreedToGuideline: document.getElementById('agreedToGuideline').checked,
     orgName: document.getElementById('orgName').value,
     contactName: document.getElementById('contactName').value,
     contactPhone: document.getElementById('contactPhone').value,
@@ -279,17 +392,35 @@ async function submitApplication() {
     serviceMode: mode ? mode.value : '',
     guestCount: document.getElementById('guestCount').value,
     equipment: equipment,
+    refFileStatus: refFileStatus,
+    refFile: (hasRef && hasRef.value === '有' && !deferred) ? (refFileInput.dataset.base64 || '') : '',
+    refFileName: refFileInput.dataset.fileName || '',
     agreedToTerms: document.getElementById('agreedToTerms').checked
   };
 
+  if (GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL' || !GAS_WEB_APP_URL) {
+    alert('系統尚未設定完成（GAS_WEB_APP_URL 未填入），請聯絡管理員');
+    return;
+  }
+
   document.getElementById('loadingOverlay').classList.add('active');
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
 
   try {
     const res = await fetch(GAS_WEB_APP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error('伺服器回應異常（狀態碼 ' + res.status + '），請確認 Apps Script 是否已重新部署');
+    }
+
     const result = await res.json();
 
     document.getElementById('loadingOverlay').classList.remove('active');
@@ -304,8 +435,13 @@ async function submitApplication() {
       alert('送出失敗：' + result.error);
     }
   } catch (err) {
+    clearTimeout(timeoutId);
     document.getElementById('loadingOverlay').classList.remove('active');
-    alert('連線發生錯誤，請稍後再試：' + err.message);
+    if (err.name === 'AbortError') {
+      alert('連線逾時（20秒無回應）。常見原因：\n1. Apps Script 部署的「誰可以存取」沒有設成「Anyone」\n2. 改完程式碼後沒有重新部署新版本\n\n請聯絡管理員檢查');
+    } else {
+      alert('連線發生錯誤，請稍後再試：' + err.message);
+    }
   }
 }
 </script>
