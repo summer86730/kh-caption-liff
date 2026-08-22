@@ -133,7 +133,7 @@
     <div class="step" data-step="4">
       <div class="card">
         <h2>④ 身心障礙證明上傳</h2>
-        <p class="hint">請從相簿選取身心障礙手冊／證明正反面照片，僅作為本次申請審核使用。</p>
+        <p class="hint">請從相簿選取身心障礙手冊／證明正反面照片。系統會自動為照片加上「本手冊資訊僅供聽打申請使用」浮水印，僅作為本次申請審核使用，請安心提供。</p>
 
         <div class="notice" id="savedFileNotice" style="display:none;">
           偵測到您上次已上傳過身障手冊照片。
@@ -345,18 +345,75 @@ document.getElementById('clearSig').addEventListener('click', () => {
 });
 
 // ---------- 照片上傳預覽 ----------
+// ---------- 照片上傳：自動加浮水印後才存入，原始照片不會被送出 ----------
+const WATERMARK_TEXT = '本手冊資訊僅供聽打申請使用';
+
+function readFileAsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('圖片讀取失敗'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('檔案讀取失敗'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function drawWatermark(img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  ctx.save();
+  ctx.globalAlpha = 0.32;
+  ctx.fillStyle = '#e0342c';
+  const fontSize = Math.max(16, Math.floor(canvas.width / 24));
+  ctx.font = 'bold ' + fontSize + 'px "PingFang TC","Microsoft JhengHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(-Math.PI / 6);
+
+  const stepX = fontSize * (WATERMARK_TEXT.length * 0.62 + 4);
+  const stepY = fontSize * 3;
+  const span = Math.max(canvas.width, canvas.height) * 1.5;
+  for (let y = -span; y < span; y += stepY) {
+    for (let x = -span; x < span; x += stepX) {
+      ctx.fillText(WATERMARK_TEXT, x, y);
+    }
+  }
+  ctx.restore();
+
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
 function bindPhotoInput(inputId, previewWrapId) {
   const input = document.getElementById(inputId);
   const wrap = document.getElementById(previewWrapId);
-  input.addEventListener('change', () => {
+  input.addEventListener('change', async () => {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      wrap.innerHTML = '<img src="' + e.target.result + '">';
-      input.dataset.base64 = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    wrap.innerHTML = '<span class="hint">處理中，正在加上浮水印…</span>';
+    try {
+      const img = await readFileAsImage(file);
+      const watermarkedDataUrl = drawWatermark(img);
+      wrap.innerHTML = '<img src="' + watermarkedDataUrl + '">' +
+        '<div class="hint" style="margin-top:6px;">✅ 已自動加上「' + WATERMARK_TEXT + '」浮水印</div>';
+      input.dataset.base64 = watermarkedDataUrl;
+    } catch (err) {
+      console.error('浮水印處理失敗，改用原始照片', err);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        wrap.innerHTML = '<img src="' + e.target.result + '">';
+        input.dataset.base64 = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   });
 }
 bindPhotoInput('idCardFront', 'frontPreviewWrap');
