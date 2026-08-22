@@ -170,6 +170,11 @@
           <input type="checkbox" id="agreedToTerms" required>
           <span>本單位已詳讀【同步聽打服務申請須知】，保證本申請表所填寫內容及檢附文件均屬實，並知悉遲到逾20分鐘服務將自動取消。</span>
         </div>
+
+        <div class="agree">
+          <input type="checkbox" id="saveProfile">
+          <span>儲存本單位資料（全名、聯絡人、聯絡方式、地址），下次申請自動帶入，不用重填</span>
+        </div>
       </div>
     </div>
 
@@ -220,11 +225,35 @@ async function initLiff() {
     const profile = await liff.getProfile();
     lineProfile.userId = profile.userId;
     lineProfile.displayName = profile.displayName;
+    await fetchSavedProfile();
   } catch (err) {
     console.warn('LIFF 初始化失敗（若在一般瀏覽器測試屬正常現象）', err);
   }
 }
 initLiff();
+
+async function fetchSavedProfile() {
+  if (!lineProfile.userId || GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') return;
+  try {
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getSavedProfile', lineUserId: lineProfile.userId, applicationType: '單位申請' })
+    });
+    const result = await res.json();
+    if (result.ok && result.profile) {
+      const p = result.profile;
+      document.getElementById('orgName').value = p.name || '';
+      document.getElementById('contactName').value = p.contactName || '';
+      document.getElementById('contactMobile').value = p.contactSms || '';
+      document.getElementById('contactPhone').value = p.contactPhone || '';
+      document.getElementById('contactEmail').value = p.contactEmail || '';
+      document.getElementById('orgAddress').value = p.orgAddress || '';
+    }
+  } catch (err) {
+    console.warn('查詢已儲存資料失敗（不影響表單正常填寫）', err);
+  }
+}
 
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -395,7 +424,8 @@ async function submitApplication() {
     refFileStatus: refFileStatus,
     refFile: (hasRef && hasRef.value === '有' && !deferred) ? (refFileInput.dataset.base64 || '') : '',
     refFileName: refFileInput.dataset.fileName || '',
-    agreedToTerms: document.getElementById('agreedToTerms').checked
+    agreedToTerms: document.getElementById('agreedToTerms').checked,
+    saveProfile: document.getElementById('saveProfile').checked
   };
 
   if (GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL' || !GAS_WEB_APP_URL) {
