@@ -135,17 +135,25 @@
         <h2>④ 身心障礙證明上傳</h2>
         <p class="hint">請從相簿選取身心障礙手冊／證明正反面照片，僅作為本次申請審核使用。</p>
 
+        <div class="notice" id="savedFileNotice" style="display:none;">
+          偵測到您上次已上傳過身障手冊照片。
+          <div class="agree" style="margin-top:10px;">
+            <input type="checkbox" id="reuseIdCard" checked>
+            <span>使用上次上傳的手冊，不用重新拍照上傳</span>
+          </div>
+        </div>
+
         <label class="req">正面</label>
         <div class="upload-box" id="frontBox">
           <span class="upload-btn">點此選擇照片</span>
-          <input type="file" id="idCardFront" accept="image/*" required>
+          <input type="file" id="idCardFront" accept="image/*">
           <div id="frontPreviewWrap"></div>
         </div>
 
         <label class="req">反面</label>
         <div class="upload-box" id="backBox">
           <span class="upload-btn">點此選擇照片</span>
-          <input type="file" id="idCardBack" accept="image/*" required>
+          <input type="file" id="idCardBack" accept="image/*">
           <div id="backPreviewWrap"></div>
         </div>
       </div>
@@ -202,6 +210,11 @@
       <div class="card">
         <h2>⑦ 確認申請資料</h2>
         <div id="summaryBox"></div>
+
+        <div class="agree">
+          <input type="checkbox" id="saveProfile">
+          <span>儲存我的申請資料（姓名、聯絡方式、身障手冊），下次申請自動帶入，不用重填</span>
+        </div>
       </div>
     </div>
 
@@ -250,6 +263,8 @@ const stepTitles = [
 let lineProfile = { userId: '', displayName: '' };
 
 // ---------- LIFF 初始化 ----------
+let savedProfile = null; // 已儲存的申請人資料（有的話由 fetchSavedProfile 填入）
+
 async function initLiff() {
   try {
     await liff.init({ liffId: LIFF_ID });
@@ -260,6 +275,7 @@ async function initLiff() {
     const profile = await liff.getProfile();
     lineProfile.userId = profile.userId;
     lineProfile.displayName = profile.displayName;
+    await fetchSavedProfile();
   } catch (err) {
     // 在一般瀏覽器（非 LINE 內建瀏覽器）開啟時 liff.init 可能失敗，
     // 這裡不擋流程，方便你在電腦上直接測試表單本身，只是不會有 LINE 資料
@@ -267,6 +283,32 @@ async function initLiff() {
   }
 }
 initLiff();
+
+// ---------- 查詢並帶入已儲存的申請人資料 ----------
+async function fetchSavedProfile() {
+  if (!lineProfile.userId || GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') return;
+  try {
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getSavedProfile', lineUserId: lineProfile.userId, applicationType: '個人申請' })
+    });
+    const result = await res.json();
+    if (result.ok && result.profile) {
+      savedProfile = result.profile;
+      document.getElementById('name').value = savedProfile.name || '';
+      document.getElementById('contactSms').value = savedProfile.contactSms || '';
+      document.getElementById('contactPhone').value = savedProfile.contactPhone || '';
+      document.getElementById('contactEmail').value = savedProfile.contactEmail || '';
+
+      if (savedProfile.idCardFrontId || savedProfile.idCardBackId) {
+        document.getElementById('savedFileNotice').style.display = 'block';
+      }
+    }
+  } catch (err) {
+    console.warn('查詢已儲存資料失敗（不影響表單正常填寫）', err);
+  }
+}
 
 // ---------- 簽名畫布 ----------
 const sigCanvas = document.getElementById('sigCanvas');
@@ -319,6 +361,11 @@ function bindPhotoInput(inputId, previewWrapId) {
 }
 bindPhotoInput('idCardFront', 'frontPreviewWrap');
 bindPhotoInput('idCardBack', 'backPreviewWrap');
+
+document.getElementById('reuseIdCard').addEventListener('change', function () {
+  document.getElementById('frontBox').style.opacity = this.checked ? '.4' : '1';
+  document.getElementById('backBox').style.opacity = this.checked ? '.4' : '1';
+});
 
 // ---------- 參考資料檔案（非圖片，通用檔案上傳） ----------
 const refFileInput = document.getElementById('refFile');
@@ -384,6 +431,10 @@ function validateStep(step) {
     if (!document.querySelector('input[name=serviceMode]:checked')) { alert('請選擇服務方式'); return false; }
   }
   if (step === 4) {
+    const reuse = document.getElementById('reuseIdCard');
+    if (reuse && reuse.checked && savedProfile && savedProfile.idCardFrontId && savedProfile.idCardBackId) {
+      return true; // 沿用上次上傳的手冊，不需要重新選擇檔案
+    }
     if (!document.getElementById('idCardFront').dataset.base64 || !document.getElementById('idCardBack').dataset.base64) {
       alert('請上傳身心障礙手冊正反面照片'); return false;
     }
@@ -475,6 +526,9 @@ async function submitApplication() {
     refFileStatus = deferred ? '有-後續補上傳' : '有-已上傳';
   }
 
+  const reuse = document.getElementById('reuseIdCard');
+  const reusing = !!(reuse && reuse.checked && savedProfile && savedProfile.idCardFrontId && savedProfile.idCardBackId);
+
   const payload = {
     applicationType: '個人申請',
     lineUserId: lineProfile.userId,
@@ -496,13 +550,16 @@ async function submitApplication() {
     serviceMode: mode ? mode.value : '',
     guestCount: document.getElementById('guestCount').value,
     equipment: equipment,
-    idCardFront: document.getElementById('idCardFront').dataset.base64 || '',
-    idCardBack: document.getElementById('idCardBack').dataset.base64 || '',
+    idCardFront: reusing ? '' : (document.getElementById('idCardFront').dataset.base64 || ''),
+    idCardBack: reusing ? '' : (document.getElementById('idCardBack').dataset.base64 || ''),
+    reuseIdCardFront: reusing,
+    reuseIdCardBack: reusing,
     refFileStatus: refFileStatus,
     refFile: (hasRef && hasRef.value === '有' && !deferred) ? (refFileInput.dataset.base64 || '') : '',
     refFileName: refFileInput.dataset.fileName || '',
     signature: signaturePad.toDataURL('image/png'),
-    agreedToTerms: document.getElementById('agreedToTerms').checked
+    agreedToTerms: document.getElementById('agreedToTerms').checked,
+    saveProfile: document.getElementById('saveProfile').checked
   };
 
   if (GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL' || !GAS_WEB_APP_URL) {
