@@ -198,9 +198,29 @@
     <div>送出中，請稍候...</div>
   </div>
 
-  <div class="helpbar">📞 填寫遇到問題？歡迎撥打 0971-300-105（陳先生）</div>
+  <div class="helpbar">💬 填寫遇到問題？點右下角「聲暉小子」查看常見問題，或直接用 LINE 打字詢問我們</div>
 
 </div><!-- /.app-shell -->
+
+<button class="mascot-fab" id="mascotFab" aria-label="開啟聲暉小子問答小幫手">
+  <span>💬</span><span class="mascot-label">聲暉小子</span>
+</button>
+
+<div class="mascot-overlay" id="mascotOverlay"></div>
+<div class="mascot-panel" id="mascotPanel">
+  <div class="mascot-header">
+    <h3>🐑 聲暉小子</h3>
+    <button class="mascot-close" id="mascotClose" aria-label="關閉問答視窗">✕</button>
+  </div>
+  <div id="mascotFaqList"><div class="hint">載入常見問題中…</div></div>
+  <div class="mascot-contact">
+    <p>沒有找到答案嗎？歡迎直接告訴我們：</p>
+    <button type="button" class="mascot-contact-btn" id="mascotLineLink" style="cursor:pointer;">🙋 一鍵轉接真人客服</button>
+    <button type="button" class="mascot-contact-btn" id="mascotQueryLink" style="cursor:pointer;">📋 查詢我的申請紀錄</button>
+    <a class="mascot-contact-btn" href="mailto:ksda.wingnet@gmail.com">✉️ 寄信給我們（ksda.wingnet@gmail.com）</a>
+    <a class="mascot-contact-btn" href="tel:0971300105">📞 撥打 0971-300-105（陳先生）</a>
+  </div>
+</div>
 
 <script>
 /* ============================================================
@@ -461,6 +481,7 @@ async function submitApplication() {
       document.querySelector('header .progress').style.display = 'none';
       document.querySelector('.nav').style.display = 'none';
       document.getElementById('resultScreen').classList.add('active');
+      sendConfirmationCard_(result.applicationId);
     } else {
       alert('送出失敗：' + result.error);
     }
@@ -473,6 +494,108 @@ async function submitApplication() {
       alert('連線發生錯誤，請稍後再試：' + err.message);
     }
   }
+}
+
+// ---------- 送出確認圖卡（用 liff.sendMessages，不佔用推播訊息額度） ----------
+async function sendConfirmationCard_(applicationId) {
+  if (typeof liff === 'undefined' || !liff.isInClient || !liff.isInClient()) return;
+  try {
+    await liff.sendMessages([{
+      type: 'flex',
+      altText: '申請已送出：' + applicationId,
+      contents: {
+        type: 'bubble',
+        header: {
+          type: 'box', layout: 'vertical', backgroundColor: '#0f5c96', paddingAll: '16px',
+          contents: [{ type: 'text', text: '✅ 申請已送出', color: '#ffffff', weight: 'bold', size: 'lg' }]
+        },
+        body: {
+          type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '16px',
+          contents: [
+            { type: 'text', text: '申請編號', size: 'sm', color: '#888888' },
+            { type: 'text', text: applicationId, weight: 'bold', size: 'xl', color: '#0f5c96' },
+            { type: 'separator', margin: 'md' },
+            { type: 'text', text: '輸入「查詢紀錄」可隨時查看申請狀態，如需取消可從查詢結果直接操作。', size: 'sm', color: '#888888', margin: 'md', wrap: true }
+          ]
+        }
+      }
+    }]);
+  } catch (err) {
+    console.warn('傳送確認圖卡失敗（不影響申請已送出）', err);
+  }
+}
+
+// ---------- 聲暉小子：FAQ 浮動小幫手 ----------
+let mascotFaqLoaded = false;
+
+function openMascotPanel() {
+  document.getElementById('mascotOverlay').classList.add('active');
+  document.getElementById('mascotPanel').classList.add('active');
+  if (!mascotFaqLoaded) loadMascotFaq();
+}
+function closeMascotPanel() {
+  document.getElementById('mascotOverlay').classList.remove('active');
+  document.getElementById('mascotPanel').classList.remove('active');
+}
+document.getElementById('mascotFab').addEventListener('click', openMascotPanel);
+document.getElementById('mascotClose').addEventListener('click', closeMascotPanel);
+document.getElementById('mascotOverlay').addEventListener('click', closeMascotPanel);
+
+async function loadMascotFaq() {
+  const listEl = document.getElementById('mascotFaqList');
+  if (GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') {
+    listEl.innerHTML = '<div class="hint">系統尚未設定完成，請聯絡管理員</div>';
+    return;
+  }
+  try {
+    const res = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getFaq' })
+    });
+    const result = await res.json();
+    if (!result.ok || !result.faq) throw new Error('no faq');
+    renderMascotFaq(result.faq);
+    mascotFaqLoaded = true;
+  } catch (err) {
+    listEl.innerHTML = '<div class="hint">常見問題載入失敗，請稍後再試，或直接透過下方管道詢問我們。</div>';
+  }
+}
+
+function renderMascotFaq(items) {
+  const listEl = document.getElementById('mascotFaqList');
+  listEl.innerHTML = items.map(function (item, i) {
+    return '<div class="mascot-faq-item">' +
+      '<button class="mascot-faq-q" data-idx="' + i + '" type="button">' + item.q + '<span class="arrow">›</span></button>' +
+      '<div class="mascot-faq-a" id="mascotFaqA' + i + '">' + item.a + '</div>' +
+    '</div>';
+  }).join('');
+  listEl.querySelectorAll('.mascot-faq-q').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.classList.toggle('open');
+      document.getElementById('mascotFaqA' + btn.dataset.idx).classList.toggle('open');
+    });
+  });
+}
+
+document.getElementById('mascotLineLink').addEventListener('click', async function () {
+  await sendQuickMessage_('真人客服');
+});
+document.getElementById('mascotQueryLink').addEventListener('click', async function () {
+  await sendQuickMessage_('查詢紀錄');
+});
+
+async function sendQuickMessage_(text) {
+  if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+    try {
+      await liff.sendMessages([{ type: 'text', text: text }]);
+      liff.closeWindow();
+      return;
+    } catch (err) {
+      console.warn('自動送出訊息失敗，改用提示方式', err);
+    }
+  }
+  alert('請回到 LINE 對話框，直接輸入「' + text + '」即可。');
 }
 </script>
 
